@@ -49,7 +49,7 @@ jobs:
           sudo tar -cvzf quoll-linux-musl-x64.tar.gz --directory=linux-musl-x64 .
           sudo tar -cvzf quoll-linux-arm.tar.gz --directory=linux-arm .
           sudo tar -cvzf quoll-linux-arm64.tar.gz --directory=linux-arm64 .
-          cd win-x64 && sudo zip -r quoll-win-x64.zip * && cd ..
+          cd win-x64 && sudo zip -r ../quoll-win-x64.zip * && cd ..
           sudo zip -r quoll-win-x86.zip win-x86/
           sudo zip -r quoll-win-arm.zip win-arm/
           sudo zip -r quoll-win-arm64.zip win-arm64/

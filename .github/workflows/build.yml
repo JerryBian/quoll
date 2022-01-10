@@ -50,11 +50,10 @@ jobs:
           sudo tar -cvzf quoll-linux-arm.tar.gz --directory=linux-arm .
           sudo tar -cvzf quoll-linux-arm64.tar.gz --directory=linux-arm64 .
           cd win-x64 && sudo zip -r ../quoll-win-x64.zip * && cd ..
-          sudo zip -r quoll-win-x86.zip win-x86/
-          sudo zip -r quoll-win-arm.zip win-arm/
-          sudo zip -r quoll-win-arm64.zip win-arm64/
-          sudo zip -r quoll-osx-x64.zip osx-x64/
-          cd ..
+          cd win-x86 && sudo zip -r ../quoll-win-x86.zip * && cd ..
+          cd win-arm && sudo zip -r ../quoll-win-arm.zip * && cd ..
+          cd win-arm64 && sudo zip -r ../quoll-win-arm64.zip * && cd ..
+          cd osx-x64 && sudo zip -r ../quoll-osx-x64.zip * && cd ..
       - uses: ncipollo/release-action@v1
         name: publish release for this version
         with:

@@ -1,0 +1,69 @@
+name: master
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  publish_release:
+    name: Publish release
+    runs-on: ubuntu-20.04
+    permissions:
+      packages: write
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y libxml2-utils zip unzip tar
+
+      - name: Setup environment variables
+        run: |
+          APP_VERSION=`xmllint --xpath "/Project/PropertyGroup/Version/text()" Directory.Build.props`
+          echo "APP_VERSION=$APP_VERSION" >> $GITHUB_ENV
+
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.x'
+          include-prerelease: false
+
+      - name: Publish Binaries
+        run: |
+          mkdir -p __ga
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r linux-x64 -c Release -o __ga/linux-x64
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r linux-musl-x64 -c Release -o __ga/linux-musl-x64
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r linux-arm -c Release -o __ga/linux-arm
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r linux-arm64 -c Release -o __ga/linux-arm64
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r win-x64 -c Release -o __ga/win-x64
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r win-x86 -c Release -o __ga/win-x86
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r win-arm -c Release -o __ga/win-arm
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r win-arm64 -c Release -o __ga/win-arm64
+          dotnet publish ./src/Console.csproj /p:AssemblyVersion=${{ env.APP_VERSION }} /p:DebugType=None --self-contained true -v normal -p:PublishTrimmed=true -p:PublishSingleFile=true -r osx-x64 -c Release -o __ga/osx-x64
+      - name: Package Binaries
+        run: |
+          cd __ga
+          sudo tar -cvzf quoll-linux-x64.tar.gz --directory=linux-x64 .
+          sudo tar -cvzf quoll-linux-musl-x64.tar.gz --directory=linux-musl-x64 .
+          sudo tar -cvzf quoll-linux-arm.tar.gz --directory=linux-arm .
+          sudo tar -cvzf quoll-linux-arm64.tar.gz --directory=linux-arm64 .
+          sudo zip -r quoll-win-x64.zip win-x64/
+          sudo zip -r quoll-win-x86.zip win-x86/
+          sudo zip -r quoll-win-arm.zip win-arm/
+          sudo zip -r quoll-win-arm64.zip win-arm64/
+          sudo zip -r quoll-osx-x64.zip osx-x64/
+          cd ..
+      - uses: ncipollo/release-action@v1
+        name: publish release for this version
+        with:
+          artifacts: "__ga/*.gz,__ga/*zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          removeArtifacts: true
+          tag: ${{ env.APP_VERSION }}
+          allowUpdates: true
+          name: ${{ env.APP_VERSION }}
+          commit: master
+          artifactErrorsFailBuild: true
+          bodyFile: "doc/release/${{ env.APP_VERSION }}.md"

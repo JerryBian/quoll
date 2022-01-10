@@ -66,4 +66,4 @@ jobs:
           name: ${{ env.APP_VERSION }}
           commit: master
           artifactErrorsFailBuild: true
-          bodyFile: "doc/release/${{ env.APP_VERSION }}.md"
+          bodyFile: "doc/release-note/${{ env.APP_VERSION }}.md"

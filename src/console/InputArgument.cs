@@ -2,12 +2,12 @@
 
 namespace Quoll.Console;
 
-public class Options
+public class InputArgument
 {
-    [Option("dir", HelpText = "The target folder.")]
+    [Value(0, MetaName = "dir", HelpText = "The target folder. Default to current folder.")]
     public string Dir { get; set; }
 
-    [Option('y', "yes", Default = false, HelpText = "Confirmation for deletion. Default to False.")]
+    [Option('y', "yes", Default = false, HelpText = "Confirmation for deletion.")]
     public bool Yes { get; set; }
 
     [Option('n', "name", Group = "filter criteria",
@@ -21,5 +21,9 @@ public class Options
     [Option("backup", HelpText = "Save to backup location before deletion.")]
     public string BackupDir { get; set; }
 
-    public double SizeInBytes { get; set; }
+    [Option("from-file", HelpText = "File paths to delete. One file path per line.")]
+    public string FromFile { get; set; }
+
+    [Option('r', "recursive", HelpText = "Include sub directories. Default to false.")]
+    public bool Recursive { get; set; }
 }

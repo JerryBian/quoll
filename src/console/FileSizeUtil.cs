@@ -4,7 +4,7 @@ public static class FileSizeUtil
 {
     private static readonly string[] Units = {"KB", "MB", "GB", "B"};
 
-    public static bool ValidateSizeString(string str, out double bytes)
+    public static bool GetSizeInBytes(string str, out double bytes)
     {
         bytes = 0;
         if (string.IsNullOrEmpty(str))

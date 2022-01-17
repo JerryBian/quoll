@@ -1,143 +1,96 @@
 ﻿using CommandLine;
 using DotNet.Globbing;
-using Quoll.Console;
 
-var fileNamePatterns = new List<Glob>();
-var fileSizeBytesLimit = -1d;
+namespace Quoll.Console;
 
-await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(async o =>
+internal class Program
 {
-    try
+    private static readonly CancellationTokenSource Cts = new();
+
+    private static async Task Main(string[] args)
     {
-        if (await ValidateOptionsAsync(o))
+        AppDomain.CurrentDomain.ProcessExit += OnExit;
+        System.Console.CancelKeyPress += OnExit;
+        TaskScheduler.UnobservedTaskException += OnExit;
+
+        await using var outputHandler = new OutputHandler(Cts.Token);
+        await Parser.Default.ParseArguments<InputArgument>(args).WithParsedAsync(async arg =>
         {
-            await Console.Out.WriteLineAsync($"Checking folder: {Path.GetFullPath(o.Dir)} ...");
-            await Console.Out.WriteLineAsync();
-            await Console.Out.WriteLineAsync("=== Files affected ===");
-
-            foreach (var name in o.Names)
+            try
             {
-                fileNamePatterns.Add(Glob.Parse(name));
+                var appOptions = GetAppOptions(arg);
+                var mainService = new MainService(appOptions, outputHandler);
+                await mainService.ExecuteAsync(Cts.Token);
             }
-
-            var items = await GetFileItemsAsync(o.Dir, o.Dir);
-            await Console.Out.WriteLineAsync();
-            if (!o.Yes)
+            catch (Exception ex)
             {
-                await Console.Out.WriteAsync(
-                    $"Are you sure to delete all these {items.Count} files? Y/y for yes, others for no: ");
-                if (!string.Equals(Console.ReadLine(), "y", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    await Console.Out.WriteLineAsync("Process terminated.");
-                    return;
-                }
+                outputHandler.Ingest(new OutputItem(ex.Message, true, true, MessageType.Error)
+                    {Exception = ex.ToString()});
             }
+        });
+        Cts.Cancel();
+    }
 
-            foreach (var item in items)
-            {
-                await Console.Out.WriteAsync($"File \"{Path.GetRelativePath(o.Dir, item)}\": ");
-                var dir = Path.GetDirectoryName(item);
-                var backupDir = o.BackupDir;
-                if (!string.IsNullOrEmpty(dir))
-                {
-                    backupDir = Path.Combine(backupDir, Path.GetRelativePath(o.Dir, dir));
-                }
+    private static void OnExit(object sender, EventArgs args)
+    {
+        Cts.Cancel();
+    }
 
-                if (!string.IsNullOrEmpty(backupDir))
-                {
-                    Directory.CreateDirectory(backupDir);
-                    var destFile = Path.Combine(backupDir, Path.GetFileName(item));
-                    File.Copy(item, destFile, true);
-                    await Console.Out.WriteAsync("Backup done. ");
-                }
-
-                File.Delete(item);
-                await Console.Out.WriteLineAsync("Delete done.");
-            }
-
-            await Console.Out.WriteLineAsync();
-            await Console.Out.WriteAsync("Done.");
+    private static AppOptions GetAppOptions(InputArgument o)
+    {
+        if (string.IsNullOrEmpty(o.Dir) || string.IsNullOrWhiteSpace(o.Dir))
+        {
+            o.Dir = Environment.CurrentDirectory;
         }
-    }
-    catch (Exception ex)
-    {
-        await Console.Error.WriteLineAsync($"Unexpected error. {ex.Message}");
-    }
-});
 
-async Task<List<string>> GetFileItemsAsync(string dirFullPath, string basePath)
-{
-    var items = new List<string>();
-    foreach (var dir in Directory.EnumerateDirectories(dirFullPath, "*", SearchOption.TopDirectoryOnly))
-    {
-        items.AddRange(await GetFileItemsAsync(dir, basePath));
-    }
-
-    foreach (var file in Directory.EnumerateFiles(dirFullPath, "*", SearchOption.TopDirectoryOnly))
-    {
-        var found = false;
-
-        if (fileNamePatterns.Any())
+        if (!Directory.Exists(o.Dir))
         {
-            foreach (var fileNamePattern in fileNamePatterns)
+            throw new Exception($"Target folder not exists: {o.Dir}");
+        }
+
+        var size = 0d;
+        if (!string.IsNullOrEmpty(o.Size) && !FileSizeUtil.GetSizeInBytes(o.Size, out size))
+        {
+            throw new Exception($"Invalid size: {o.Size}. {FileSizeUtil.GetSizeStringPrompt()}");
+        }
+
+        if (!string.IsNullOrEmpty(o.BackupDir) && !Directory.Exists(o.BackupDir))
+        {
+            try
             {
-                if (fileNamePattern.IsMatch(Path.GetFileName(file)))
-                {
-                    found = true;
-                    break;
-                }
+                Directory.CreateDirectory(o.BackupDir);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Creating backup folder failed. {ex.Message}");
             }
         }
 
-        if (fileSizeBytesLimit >= 0)
+        var files = new List<string>();
+        if (!string.IsNullOrEmpty(o.FromFile))
         {
-            if (new FileInfo(file).Length <= fileSizeBytesLimit)
+            if (!File.Exists(o.FromFile))
             {
-                found = true;
+                throw new Exception($"File not exist specified in from-file argument: {o.FromFile}");
+            }
+
+            foreach (var file in File.ReadLines(o.FromFile))
+            {
+                files.Add(Path.GetFullPath(file));
             }
         }
 
-        if (found)
+        var appOptions = new AppOptions
         {
-            await Console.Out.WriteLineAsync(Path.GetRelativePath(basePath, file));
-            items.Add(file);
-        }
+            BackupDir = o.BackupDir,
+            Dir = o.Dir,
+            NeedConfirmation = !o.Yes,
+            IncludedFileSizeInBytes = size,
+            IncludeSubDirs = o.Recursive
+        };
+        appOptions.IncludedNameGlobs.AddRange(o.Names.Select(Glob.Parse));
+        appOptions.IncludedFiles.AddRange(files);
+
+        return appOptions;
     }
-
-    return items;
-}
-
-async Task<bool> ValidateOptionsAsync(Options o)
-{
-    if (string.IsNullOrEmpty(o.Dir) || string.IsNullOrWhiteSpace(o.Dir))
-    {
-        o.Dir = Environment.CurrentDirectory;
-    }
-
-    if (!Directory.Exists(o.Dir))
-    {
-        await Console.Error.WriteLineAsync($"Target folder not exists: {o.Dir}");
-        return false;
-    }
-
-    if (!string.IsNullOrEmpty(o.Size) && !FileSizeUtil.ValidateSizeString(o.Size, out fileSizeBytesLimit))
-    {
-        await Console.Error.WriteLineAsync($"Invalid size: {o.Size}. {FileSizeUtil.GetSizeStringPrompt()}");
-        return false;
-    }
-
-    if (!string.IsNullOrEmpty(o.BackupDir) && !Directory.Exists(o.BackupDir))
-    {
-        try
-        {
-            Directory.CreateDirectory(o.BackupDir);
-        }
-        catch (Exception ex)
-        {
-            await Console.Error.WriteLineAsync($"Creating backup folder failed. {ex.Message}");
-            return false;
-        }
-    }
-
-    return true;
 }

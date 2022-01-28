@@ -7,11 +7,28 @@
     <Nullable>disable</Nullable>
     <AssemblyName>quoll</AssemblyName>
     <RootNamespace>Quoll.Console</RootNamespace>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Authors>cnBian</Authors>
+    <Title>quoll</Title>
+    <IncludeSymbols>true</IncludeSymbols>
+    <Description>Command line tool to DELETE files.</Description>
+    <Summary>Command line tool to DELETE files.</Summary>
+    <Copyright>Copyright © Jerry Bian 2022</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/JerryBian/quoll</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/JerryBian/quoll.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackAsTool>true</PackAsTool>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
     <PackageReference Include="DotNet.Glob" Version="3.1.3" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath=""/>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" Visible="false"/>
+</ItemGroup>
 
 </Project>

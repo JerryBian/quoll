@@ -7,21 +7,15 @@ public static class FileSizeUtil
     public static bool GetSizeInBytes(string str, out double bytes)
     {
         bytes = 0;
-        if (string.IsNullOrEmpty(str))
-        {
-            return false;
-        }
+        if (string.IsNullOrEmpty(str)) return false;
 
         var valid = false;
         foreach (var unit in Units)
-        {
             if (str.EndsWith(unit, StringComparison.InvariantCulture))
             {
                 if (!double.TryParse(str.AsSpan(0, str.IndexOf(unit, StringComparison.InvariantCulture)),
                         out var d))
-                {
                     return false;
-                }
 
                 valid = true;
                 switch (unit)
@@ -42,7 +36,6 @@ public static class FileSizeUtil
 
                 break;
             }
-        }
 
         return valid;
     }

@@ -2,7 +2,7 @@
   "profiles": {
     "Console": {
       "commandName": "Project",
-      "commandLineArgs": "--dir C:\\temp\\test3"
+      "commandLineArgs": "C:\\temp2\\1 -r -f 2 -b C:\\temp2\\3"
     }
   }
 }

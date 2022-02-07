@@ -21,10 +21,7 @@ public class OutputHandler : IOutputHandler, IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await _task.WaitAsync(CancellationToken.None);
-        while (_items.TryDequeue(out var item))
-        {
-            await ProcessItemAsync(item);
-        }
+        while (_items.TryDequeue(out var item)) await ProcessItemAsync(item);
 
         await System.Console.Out.WriteAsync($"Logs are save to {_logFilePath}");
     }
@@ -37,12 +34,8 @@ public class OutputHandler : IOutputHandler, IAsyncDisposable
     private async Task ProcessAsync()
     {
         while (!_cancellationToken.IsCancellationRequested)
-        {
             if (_items.TryDequeue(out var item))
-            {
                 await ProcessItemAsync(item);
-            }
-        }
     }
 
     private async Task ProcessItemAsync(OutputItem item)
@@ -63,17 +56,12 @@ public class OutputHandler : IOutputHandler, IAsyncDisposable
         if (item.AppendNewLine)
         {
             message += Environment.NewLine;
-            if (!string.IsNullOrEmpty(item.Exception))
-            {
-                message += item.Exception + Environment.NewLine;
-            }
+            if (!string.IsNullOrEmpty(item.Exception)) message += item.Exception + Environment.NewLine;
         }
         else
         {
             if (!string.IsNullOrEmpty(item.Exception))
-            {
                 message += Environment.NewLine + item.Exception + Environment.NewLine;
-            }
         }
 
         await File.AppendAllTextAsync(_logFilePath, message, Encoding.UTF8, CancellationToken.None);
@@ -82,10 +70,7 @@ public class OutputHandler : IOutputHandler, IAsyncDisposable
     private async Task WriteToConsoleAsync(OutputItem item)
     {
         var message = item.Message;
-        if (item.AppendNewLine)
-        {
-            message += Environment.NewLine;
-        }
+        if (item.AppendNewLine) message += Environment.NewLine;
 
         System.Console.ForegroundColor = item.MessageType switch
         {
@@ -95,21 +80,16 @@ public class OutputHandler : IOutputHandler, IAsyncDisposable
             MessageType.Error => ConsoleColor.Red,
             MessageType.Success => ConsoleColor.Green,
             MessageType.Warning => ConsoleColor.Yellow,
+            MessageType.Verbose => ConsoleColor.Gray,
+            MessageType.DarkVerbose => ConsoleColor.DarkGray,
             _ => System.Console.ForegroundColor
         };
 
         if (item.IsError)
-        {
             await System.Console.Error.WriteAsync(message);
-        }
         else
-        {
             await System.Console.Out.WriteAsync(message);
-        }
 
-        if (item.IsError || item.MessageType > MessageType.Default)
-        {
-            System.Console.ResetColor();
-        }
+        if (item.IsError || item.MessageType > MessageType.Default) System.Console.ResetColor();
     }
 }

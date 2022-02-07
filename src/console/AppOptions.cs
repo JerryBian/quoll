@@ -10,6 +10,8 @@ public class AppOptions
 
     public List<Glob> IncludedNameGlobs { get; } = new();
 
+    public List<Glob> IncludedFolderNameGlobs { get; } = new();
+
     public double IncludedFileSizeInBytes { get; set; }
 
     public string BackupDir { get; set; }
@@ -17,4 +19,6 @@ public class AppOptions
     public List<string> IncludedFiles { get; } = new();
 
     public bool IncludeSubDirs { get; set; }
+
+    public bool RemoveEmptyDir { get; set; }
 }

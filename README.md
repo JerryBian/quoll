@@ -1,7 +1,28 @@
-# quoll
-Command line tool to DELETE files
+Command line tool to DELETE files.
 
-## Options
+### Install
+
+You can go directly download from the [Release](https://github.com/JerryBian/quoll/releases) page according to your target platform.
+
+Or you can use dotnet [global tools](https://www.nuget.org/packages/quoll/) if you have already [.NET 6](https://dotnet.microsoft.com/download) installed.
+
+```sh
+dotnet tool install --global quoll
+```
+For Mac users with zsh, please manually add the dotnet global tool path to `~/.zshrc`. Simply add this line as descriped in this [issue](https://github.com/dotnet/sdk/issues/9415#issuecomment-406915716).
+
+```sh
+export PATH=$HOME/.dotnet/tools:$PATH
+```
+
+If you would like to upgrade to latest version as you already installed, you can:
+
+```sh
+dotnet tool update --global quoll
+```
+
+
+## Usage
 
 ```
 -y, --yes          (Default: false) Confirmation for deletion.
@@ -27,4 +48,4 @@ dir (pos. 0)       The target folder. Default to current folder.
 
 ## License
 
-[MIT](./LICENSE)
+MIT

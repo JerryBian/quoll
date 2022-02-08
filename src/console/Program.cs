@@ -56,13 +56,24 @@ internal class Program
         if (!string.IsNullOrEmpty(o.FromFile))
         {
             if (!File.Exists(o.FromFile))
+            {
                 throw new Exception($"File not exist specified in from-file argument: {o.FromFile}");
+            }
 
-            foreach (var file in File.ReadLines(o.FromFile)) files.Add(Path.GetFullPath(file));
+            foreach (var file in File.ReadLines(o.FromFile))
+            {
+                if (!string.IsNullOrEmpty(file))
+                {
+                    files.Add(Path.GetFullPath(file));
+                }
+            }
         }
         else
         {
-            if (string.IsNullOrEmpty(o.Dir) || string.IsNullOrWhiteSpace(o.Dir)) o.Dir = Environment.CurrentDirectory;
+            if (string.IsNullOrEmpty(o.Dir) || string.IsNullOrWhiteSpace(o.Dir))
+            {
+                o.Dir = Environment.CurrentDirectory;
+            }
 
             if (!Directory.Exists(o.Dir)) throw new Exception($"Target folder not exists: {o.Dir}");
         }

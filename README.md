@@ -1,6 +1,6 @@
-Command line tool to DELETE files.
+Command line tool to DELETE files. All supported features can be found in this [roadmap issue](https://github.com/JerryBian/quoll/issues/5).
 
-### Install
+## Install
 
 You can go directly download from the [Release](https://github.com/JerryBian/quoll/releases) page according to your target platform.
 
@@ -24,26 +24,31 @@ dotnet tool update --global quoll
 
 ## Usage
 
+`quoll [options] [dir]`
+
 ```
--y, --yes          (Default: false) Confirmation for deletion.
+-y, --yes             (Default: false) Confirmation for deletion.
 
--n, --name         (Group: filter criteria) Filter by glob pattern file names. Multiple names can be separated by
-                    comma.
+-n, --name            Filter by glob pattern file names. Multiple names can be separated by comma. Default to *.
 
--s, --size         (Group: filter criteria) Filter by file size(less than or equals), valid strings are xxB, xxKB,
-                    xxMB, xxGB.
+-f, --folder          Filter by glob pattern folder names. Multiple names can be separated by comma. Default not to delete folders, unless      
+                    --remove-empty-dir specified.
 
---backup           Save to backup location before deletion.
+-s, --size            Filter by file size(less than or equals), valid strings are xxB, xxKB, xxMB, xxGB.
 
---from-file        File paths to delete. One file path per line.
+-b, --backup          Save to backup location before deletion.
 
--r, --recursive    Include sub directories. Default to false.
+--from-file           File paths to delete. One file path per line.
 
---help             Display this help screen.
+-r, --recursive       Include sub directories. Default to false.
 
---version          Display version information.
+--remove-empty-dir    Remove all empty folders.
 
-dir (pos. 0)       The target folder. Default to current folder.
+--help                Display this help screen.
+
+--version             Display version information.
+
+dir (pos. 0)          The target folder. Default to current folder.
 ```
 
 ## License

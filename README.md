@@ -1,3 +1,5 @@
+## This project is marked as Archive, please use [tur](https://github.com/JerryBian/tur) instead.
+
 Command line tool to DELETE files. All supported features can be found in this [roadmap issue](https://github.com/JerryBian/quoll/issues/5).
 
 ## Install
